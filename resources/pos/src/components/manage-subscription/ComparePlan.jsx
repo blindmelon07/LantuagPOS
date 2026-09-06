@@ -5,16 +5,17 @@ import ManualLogo from "../../assets/images/manual.svg";
 import PaypalLogo from "../../assets/images/paypal.svg";
 import RazorpayLogo from "../../assets/images/razorpay.svg";
 import PayStack from "../../assets/images/paystack.svg";
+import PayMongoLogo from "../../assets/images/paymongo.svg";
 import StripeLogo from "../../assets/images/stripe.svg";
 import { PAYMENT_METHODS } from '../../constants';
 import { formatAmount, getFormattedMessage, placeholderText } from '../../shared/sharedMethod';
 import TabTitle from '../../shared/tab-title/TabTitle';
-import { comparePlans, createSubscription, fetchPaymentMethods, handlePaypalPayment, handleRazorPayPayment, handleStripePayment, handlePayStackPayment } from '../../store/action/plansAction';
+import { comparePlans, createSubscription, fetchPaymentMethods, handlePaypalPayment, handleRazorPayPayment, handleStripePayment, handlePayStackPayment, handlePayMongoPayment } from '../../store/action/plansAction';
 import MasterLayout from '../MasterLayout';
 import { useRazorpay } from "react-razorpay";
 
 const ComparePlan = (props) => {
-    const { fetchPaymentMethods, userPlans, comparePlans, createSubscription, handlePaypalPayment, handleStripePayment, handleRazorPayPayment, handlePayStackPayment, stores } = props;
+    const { fetchPaymentMethods, userPlans, comparePlans, createSubscription, handlePaypalPayment, handleStripePayment, handleRazorPayPayment, handlePayStackPayment, handlePayMongoPayment, stores } = props;
     const { id } = useParams();
     const navigate = useNavigate();
     const { Razorpay } = useRazorpay();
@@ -101,6 +102,15 @@ const ComparePlan = (props) => {
 
         if (selectedPaymentMethod == PAYMENT_METHODS.PAYSTACK) {
             handlePayStackPayment({
+                plan_id: id,
+                amount: userPlans?.comparePlans?.new_plan?.payable_amount,
+                ...(shouldIncludeStores && { stores: selectStore }),
+            });
+            return;
+        }
+
+        if (selectedPaymentMethod == PAYMENT_METHODS.PAYMONGO) {
+            handlePayMongoPayment({
                 plan_id: id,
                 amount: userPlans?.comparePlans?.new_plan?.payable_amount,
                 ...(shouldIncludeStores && { stores: selectStore }),
@@ -530,6 +540,26 @@ const ComparePlan = (props) => {
                                         </div>
                                     </div>
                                 </div> : null}
+                                {userPlans?.paymentMethods?.payment_methods?.some((method) => method.type == PAYMENT_METHODS.PAYMONGO) ? <div className="col-lg-2 p-2">
+                                    <div className="mb-xxl-0 mb-4 border-radius" style={{ border: "1px solid rgb(234, 234, 236)" }}>
+                                        <div className="selected-box">
+                                            <label className="form-check p-4 input-padding">
+                                                <div className="d-flex gap-3 justify-content-between">
+                                                    <div className=" mb-3">
+                                                        <img src={PayMongoLogo} alt='paymongo-logo' />
+                                                    </div>
+                                                    <div>
+                                                        <input onClick={() => setSelectedPaymentMethod(PAYMENT_METHODS.PAYMONGO)} className="form-check-input capture " type="radio" name="payment_mode" value="paymongo_payment" />
+                                                    </div>
+                                                </div>
+                                                <h6 className="mb-0">{getFormattedMessage("paymongo.title")}
+                                                </h6>
+                                                <p className="fs-14p mb-0">{getFormattedMessage("pay-with.label")} {getFormattedMessage("paymongo.title")}
+                                                </p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div> : null}
                                 {userPlans?.paymentMethods?.payment_methods?.some((method) => method.type == PAYMENT_METHODS.MANUAL) ? <div className="col-lg-2 p-2">
                                     <div className="mb-xxl-0 mb-4 border-radius" style={{ border: "1px solid rgb(234, 234, 236)" }} >
                                         <div className="selected-box">
@@ -615,4 +645,4 @@ const mapStateToProps = (state) => {
     return { userPlans, stores }
 }
 
-export default connect(mapStateToProps, { fetchPaymentMethods, comparePlans, createSubscription, handlePaypalPayment, handleStripePayment, handleRazorPayPayment, handlePayStackPayment })(ComparePlan)
+export default connect(mapStateToProps, { fetchPaymentMethods, comparePlans, createSubscription, handlePaypalPayment, handleStripePayment, handleRazorPayPayment, handlePayStackPayment, handlePayMongoPayment })(ComparePlan)

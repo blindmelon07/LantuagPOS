@@ -168,6 +168,9 @@ class SadminSettingAPIController extends AppBaseController
             'paystack_key',
             'paystack_secret',
             'paystack_mode',
+            'paymongo_enabled',
+            'paymongo_key',
+            'paymongo_secret',
         ];
 
         $settings = SadminSetting::whereIn('key', $keyName)->pluck('value', 'key')->toArray();
@@ -200,6 +203,9 @@ class SadminSettingAPIController extends AppBaseController
                 'paystack_key' => 'required_if:paystack_enabled,1',
                 'paystack_secret' => 'required_if:paystack_enabled,1',
                 'paystack_mode' => 'required_if:paystack_enabled,1',
+                'paymongo_enabled' => 'boolean',
+                'paymongo_key' => 'required_if:paymongo_enabled,1',
+                'paymongo_secret' => 'required_if:paymongo_enabled,1',
             ]
         );
 

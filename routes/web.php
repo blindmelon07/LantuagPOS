@@ -5,6 +5,7 @@ use App\Http\Controllers\API\TwoFactorAuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaypalPaymentController;
 use App\Http\Controllers\PaystackPaymentController;
+use App\Http\Controllers\PayMongoPaymentController;
 use App\Http\Controllers\RazorpayPaymentController;
 use App\Http\Controllers\StripePaymentController;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,9 @@ Route::any('/razorpay/success', [RazorpayPaymentController::class, 'paymentSucce
 Route::any('/razorpay/failed/', [RazorpayPaymentController::class, 'paymentFailed'])->name('razorpay-failed');
 
 Route::any('/paystack/payment-success', [PaystackPaymentController::class, 'paymentSuccess'])->name('paystack-success');
+
+Route::any('/paymongo/payment-success', [PayMongoPaymentController::class, 'paymentSuccess'])->name('paymongo-success');
+Route::any('/paymongo/failed/', [PayMongoPaymentController::class, 'paymentFailed'])->name('paymongo-failed');
 Route::get('two-factor-auth/download-recovery-codes/{user}', [TwoFactorAuthController::class, 'downloadRecoveryCodes'])->name('two-factor.download-recovery-codes');
 
 include 'upgrade.php';

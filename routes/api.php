@@ -26,6 +26,7 @@ use App\Http\Controllers\API\SupplierAPIController;
 use App\Http\Controllers\API\TransferAPIController;
 use App\Http\Controllers\MailTemplateAPIController;
 use App\Http\Controllers\PaystackPaymentController;
+use App\Http\Controllers\PayMongoPaymentController;
 use App\Http\Controllers\RazorpayPaymentController;
 use App\Http\Controllers\API\DashboardAPIController;
 use App\Http\Controllers\API\QuotationAPIController;
@@ -76,6 +77,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('paypal/generate-session', [PaypalPaymentController::class, 'generateSession'])->name('paypal-generate-session');
     Route::post('razorpay/generate-session', [RazorpayPaymentController::class, 'generateSession'])->name('stripe-generate-session');
     Route::post('paystack/generate-session', [PaystackPaymentController::class, 'generateSession'])->name('paystack-generate-session');
+    Route::post('paymongo/generate-session', [PayMongoPaymentController::class, 'generateSession'])->name('paymongo-generate-session');
 
     Route::middleware(['check_subscription'])->group(function () {
         Route::get('stores-warehouses', [StoreAPIController::class , 'getStoresWarehouses']);

@@ -39,5 +39,10 @@ return [
     'paystack' => [
         'key' => env('PAYSTACK_PUBLIC_KEY'),
         'secret' => env('PAYSTACK_SECRET_KEY'),
-    ]
+    ],
+
+    'paymongo' => [
+        'key' => env('PAYMONGO_PUBLIC_KEY'),
+        'secret' => env('PAYMONGO_SECRET_KEY'),
+    ],
 ];

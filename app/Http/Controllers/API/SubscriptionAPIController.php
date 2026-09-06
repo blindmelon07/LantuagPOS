@@ -135,6 +135,7 @@ class SubscriptionAPIController extends AppBaseController
             'paypal_enabled',
             'razorpay_enabled',
             'paystack_enabled',
+            'paymongo_enabled',
         ];
 
         $paymentTypeKeys = [
@@ -143,6 +144,7 @@ class SubscriptionAPIController extends AppBaseController
             'paypal_enabled' => Subscription::TYPE_PAYPAL,
             'razorpay_enabled' => Subscription::TYPE_RAZORPAY,
             'paystack_enabled' => Subscription::TYPE_PAYSTACK,
+            'paymongo_enabled' => Subscription::TYPE_PAYMONGO,
         ];
 
         $settings = SadminSetting::whereIn('key', $keyName)

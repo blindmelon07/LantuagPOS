@@ -60,6 +60,8 @@ class Subscription extends Model implements JsonResourceful, HasMedia
 
     const TYPE_PAYSTACK = 5;
 
+    const TYPE_PAYMONGO = 6;
+
     const PAYMENT_TYPES = [
         self::TYPE_FREE => 'Free',
         self::TYPE_STRIPE => 'Stripe',
@@ -67,6 +69,7 @@ class Subscription extends Model implements JsonResourceful, HasMedia
         self::TYPE_MANUAL => 'Manual',
         self::TYPE_RAZORPAY => 'RazorPay',
         self::TYPE_PAYSTACK => 'Paystack',
+        self::TYPE_PAYMONGO => 'PayMongo',
     ];
 
     public function prepareLinks(): array

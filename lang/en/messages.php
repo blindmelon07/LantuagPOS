@@ -117,6 +117,7 @@ return [
         'default_language_cant_disable' => 'Default Language can\'t be disabled.',
         'language_in_use_cant_disable' => 'Language currently in use can\'t be disabled.',
         'currency_not_supported_paypal' => 'This currency is not supported by PayPal for making payments.',
+        'currency_not_supported_paymongo' => 'PayMongo only supports payments in Philippine Peso (PHP).',
         'iso_code_unique' => 'The ISO code has already been taken.',
         'current_password_not_match' => 'Current password does not match.',
         'password_confirm_password_same' => 'New password and confirm password must be same.',

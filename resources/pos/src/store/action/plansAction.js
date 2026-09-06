@@ -312,3 +312,24 @@ export const handlePayStackPayment = (data) => async (dispatch) => {
             );
         });
 };
+
+export const handlePayMongoPayment = (data) => async (dispatch) => {
+    apiConfig
+        .post(apiBaseURL.PAYMONGO_PAYMENT, data)
+        .then((response) => {
+            window.location.href = response.data.data.url;
+            dispatch(
+                addToast({
+                    text: response?.data?.message,
+                })
+            );
+        })
+        .catch(({ response }) => {
+            dispatch(
+                addToast({
+                    text: response?.data?.message,
+                    type: toastType.ERROR,
+                })
+            );
+        });
+};

@@ -321,6 +321,16 @@ export const getPermission = (allPermissions, permission) => {
     return getPermission ? true : false;
 };
 
+export const mapPermissionToRoute = (permission) => {
+    const permissionKey = permission.toLowerCase();
+    if (permissionMappings.hasOwnProperty(permissionKey)) {
+        return permissionMappings[permissionKey];
+    } else {
+        const entity = permissionKey.split("_").slice(1).join("-");
+        return `/app/user/${entity}`;
+    }
+};
+
 export const paymentMethodName = (paymentMethods, updateProducts) => {
     const paymentMethodType = paymentMethods?.length > 0 && paymentMethods?.filter((payment_type) => payment_type.id == updateProducts.payment_type);
     const paymentMethodTypeName = paymentMethodType[0] && paymentMethodType[0].attributes && paymentMethodType[0].attributes.name;

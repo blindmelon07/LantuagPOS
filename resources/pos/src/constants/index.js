@@ -116,6 +116,7 @@ export const apiBaseURL = {
     PAYPAL_PAYMENT: "paypal/generate-session",
     RAZORPAY_PAYMENT: "razorpay/generate-session",
     PAYSTACK_PAYMENT: "paystack/generate-session",
+    PAYMONGO_PAYMENT: "paymongo/generate-session",
     STATUS: "users/status",
     STORES: "stores",
     STORE_WAREHOUSES: "stores-warehouses",
@@ -1064,7 +1065,8 @@ export const PAYMENT_METHODS = {
     PAYPAL: 2,
     MANUAL: 3,
     RAZORPAY: 4,
-    PAYSTACK: 5
+    PAYSTACK: 5,
+    PAYMONGO: 6
 };
 
 export const paymentMethods = [
@@ -1074,6 +1076,7 @@ export const paymentMethods = [
     { id: 3, name: "manually.title" },
     { id: 4, name: "razorpay.title" },
     { id: 5, name: "paystack.title" },
+    { id: 6, name: "paymongo.title" },
 ];
 
 export const dateFormatOptions = [

@@ -27,6 +27,8 @@ const PaymentSettings = () => {
         razorpaySecret: "",
         paystackKey: "",
         paystackSecret: "",
+        paymongoKey: "",
+        paymongoSecret: "",
         paypalEnv: "sandbox",
         stripeEnv: "sandbox",
         razorpayEnv: "sandbox",
@@ -52,6 +54,7 @@ const PaymentSettings = () => {
     const [isManualEnabled, setIsManualEnabled] = useState(false);
     const [isRazorpayEnabled, setIsRazorpayEnabled] = useState(false);
     const [isPaystackEnabled, setIsPaystackEnabled] = useState(false);
+    const [isPayMongoEnabled, setIsPayMongoEnabled] = useState(false);
     const [initialValues, setInitialValues] = useState(null);
     const [disabled, setDisabled] = useState(true);
 
@@ -72,6 +75,9 @@ const PaymentSettings = () => {
                 paystackKey: paymentSettings.paystack_key || "",
                 paystackSecret: paymentSettings.paystack_secret || "",
                 isPaystackEnabled: paymentSettings.paystack_enabled == 1,
+                paymongoKey: paymentSettings.paymongo_key || "",
+                paymongoSecret: paymentSettings.paymongo_secret || "",
+                isPayMongoEnabled: paymentSettings.paymongo_enabled == 1,
                 paypalEnv: paymentSettings.paypal_mode || "sandbox",
                 stripeEnv: paymentSettings.stripe_mode || "sandbox",
                 razorpayEnv: paymentSettings.razorpay_mode || "sandbox",
@@ -95,9 +101,12 @@ const PaymentSettings = () => {
                 initialValues.razorpaySecret === formValues.razorpaySecret &&
                 initialValues.paystackKey === formValues.paystackKey &&
                 initialValues.paystackSecret === formValues.paystackSecret &&
+                initialValues.paymongoKey === formValues.paymongoKey &&
+                initialValues.paymongoSecret === formValues.paymongoSecret &&
                 initialValues.isPayPalEnabled === isPayPalEnabled &&
                 initialValues.isRazorpayEnabled === isRazorpayEnabled &&
                 initialValues.isPaystackEnabled === isPaystackEnabled &&
+                initialValues.isPayMongoEnabled === isPayMongoEnabled &&
                 initialValues.isStripeEnabled === isStripeEnabled &&
                 initialValues.isManualEnabled === isManualEnabled &&
                 initialValues.paypalEnv === formValues.paypalEnv &&
@@ -115,6 +124,7 @@ const PaymentSettings = () => {
         isManualEnabled,
         initialValues,
         isPaystackEnabled,
+        isPayMongoEnabled,
     ]);
 
     const [errors, setErrors] = useState({
@@ -126,6 +136,8 @@ const PaymentSettings = () => {
         razorpaySecret: "",
         paystackKey: "",
         paystackSecret: "",
+        paymongoKey: "",
+        paymongoSecret: "",
         manualInstructions: "",
     });
 
@@ -146,6 +158,8 @@ const PaymentSettings = () => {
                 razorpaySecret: paymentSettings.razorpay_secret || "",
                 paystackKey: paymentSettings.paystack_key || "",
                 paystackSecret: paymentSettings.paystack_secret || "",
+                paymongoKey: paymentSettings.paymongo_key || "",
+                paymongoSecret: paymentSettings.paymongo_secret || "",
                 paypalEnv: paymentSettings.paypal_mode || "sandbox",
                 stripeEnv: paymentSettings.stripe_mode || "sandbox",
                 razorpayEnv: paymentSettings.razorpay_mode || "sandbox",
@@ -158,6 +172,7 @@ const PaymentSettings = () => {
             setIsManualEnabled(paymentSettings.manual_payment_enabled === "1");
             setIsRazorpayEnabled(paymentSettings.razorpay_enabled === "1");
             setIsPaystackEnabled(paymentSettings.paystack_enabled === "1");
+            setIsPayMongoEnabled(paymentSettings.paymongo_enabled === "1");
         }
     }, [paymentSettings]);
 
@@ -173,6 +188,7 @@ const PaymentSettings = () => {
     const handleStripeToggle = (e) => setIsStripeEnabled(e.target.checked);
     const handleRazorpayToggle = (e) => setIsRazorpayEnabled(e.target.checked);
     const handlePaystackpayToggle = (e) => setIsPaystackEnabled(e.target.checked);
+    const handlePayMongoToggle = (e) => setIsPayMongoEnabled(e.target.checked);
     const handleManualToggle = (e) => setIsManualEnabled(e.target.checked);
 
     const handleValidation = () => {
@@ -184,6 +200,7 @@ const PaymentSettings = () => {
             !isStripeEnabled &&
             !isRazorpayEnabled &&
             !isPaystackEnabled &&
+            !isPayMongoEnabled &&
             !isManualEnabled
         ) {
             dispatch(
@@ -257,6 +274,21 @@ const PaymentSettings = () => {
             }
         }
 
+        if (isPayMongoEnabled) {
+            if (!formValues.paymongoKey) {
+                errorss["paymongoKey"] = getFormattedMessage(
+                    "paymongo.key.validate.title"
+                );
+                isValid = false;
+            }
+            if (!formValues.paymongoSecret) {
+                errorss["paymongoSecret"] = getFormattedMessage(
+                    "paymongo.secret.validate.title"
+                );
+                isValid = false;
+            }
+        }
+
         if (isManualEnabled && !formValues.manualInstructions) {
             errorss["manualInstructions"] = getFormattedMessage(
                 "payment-settings.manual-instructions.validate.label"
@@ -286,6 +318,9 @@ const PaymentSettings = () => {
                 razorpay_secret: formValues.razorpaySecret,
                 paystack_key: formValues.paystackKey,
                 paystack_secret: formValues.paystackSecret,
+                paymongo_enabled: isPayMongoEnabled ? "1" : "0",
+                paymongo_key: formValues.paymongoKey,
+                paymongo_secret: formValues.paymongoSecret,
                 paypal_mode: formValues.paypalEnv,
                 stripe_mode: formValues.stripeEnv,
                 razorpay_mode: formValues.razorpayEnv,
@@ -679,6 +714,83 @@ const PaymentSettings = () => {
                                                     </Form.Select>
                                                 </Form.Group>
                                             </Col> */}
+                                        </Row>
+                                    )}
+
+                                    {/* PayMongo Section */}
+                                    <Form.Group
+                                        className="mb-3"
+                                        controlId="paymongoToggle"
+                                    >
+                                        <Form.Check
+                                            type="switch"
+                                            label={getFormattedMessage(
+                                                "paymongo.title"
+                                            )}
+                                            checked={isPayMongoEnabled}
+                                            onChange={handlePayMongoToggle}
+                                        />
+                                    </Form.Group>
+                                    {isPayMongoEnabled && (
+                                        <Row className="mb-3">
+                                            <Col md={6}>
+                                                <Form.Group>
+                                                    <label>
+                                                        {getFormattedMessage(
+                                                            "paymongo.key.title"
+                                                        )}
+                                                        :
+                                                    </label>
+                                                    <span className="required" />
+                                                    <Form.Control
+                                                        type="text"
+                                                        name="paymongoKey"
+                                                        value={
+                                                            formValues.paymongoKey
+                                                        }
+                                                        onChange={
+                                                            handleInputChange
+                                                        }
+                                                        placeholder={placeholderText(
+                                                            "paymongo.key.title"
+                                                        )}
+                                                    />
+                                                    <span className="text-danger d-block fw-400 fs-small mt-2">
+                                                        {errors["paymongoKey"]}
+                                                    </span>
+                                                </Form.Group>
+                                            </Col>
+                                            <Col md={6}>
+                                                <Form.Group>
+                                                    <label>
+                                                        {getFormattedMessage(
+                                                            "paymongo.secret.title"
+                                                        )}
+                                                        :
+                                                    </label>
+                                                    <span className="required" />
+                                                    <Form.Control
+                                                        type="text"
+                                                        name="paymongoSecret"
+                                                        value={
+                                                            formValues.paymongoSecret
+                                                        }
+                                                        onChange={
+                                                            handleInputChange
+                                                        }
+                                                        placeholder={placeholderText(
+                                                            "paymongo.secret.title"
+                                                        )}
+                                                    />
+                                                    <span className="text-danger d-block fw-400 fs-small mt-2">
+                                                        {
+                                                            errors[
+                                                            "paymongoSecret"
+                                                            ]
+                                                        }
+                                                    </span>
+                                                </Form.Group>
+                                            </Col>
                                         </Row>
                                     )}
 
