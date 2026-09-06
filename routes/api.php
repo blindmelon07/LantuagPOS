@@ -470,9 +470,9 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     });
 });
 
-Route::post('login', [AuthController::class, 'login'])->name('login');
-Route::post('two-factor-auth/verify', [TwoFactorAuthController::class, 'verifyCode']);
-Route::post('register', [AuthController::class, 'register']);
+Route::post('login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login');
+Route::post('two-factor-auth/verify', [TwoFactorAuthController::class, 'verifyCode'])->middleware('throttle:5,1');
+Route::post('register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 Route::get('cache-clear', [SettingAPIController::class, 'clearCache'])->name('cache-clear');
 
 Route::post(
