@@ -7,7 +7,7 @@
         "watch-poll": "mix watch -- --watch-options-poll=1000",
         "hot": "mix watch --hot",
         "prod": "npm run production",
-        "production": "NODE_OPTIONS=--max-old-space-size=4096 mix --production",
+        "production": "cross-env NODE_OPTIONS=--max-old-space-size=4096 mix --production",
         "rtl": "webpack --config webpack-rtl.config.js",
         "build": "react-scripts --max_old_space_size=4096 build"
     },
@@ -16,6 +16,7 @@
         "@testing-library/react": "^12.1.2",
         "@testing-library/user-event": "^13.5.0",
         "axios": "^0.25",
+        "cross-env": "^10.1.0",
         "css-loader": "^6.7.1",
         "laravel-mix": "^6.0.6",
         "lodash": "^4.17.19",
