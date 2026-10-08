@@ -30,7 +30,7 @@ class Plan extends BaseModel implements JsonResourceful
         'frequency' => 'required|in:1,2,3,4',
         'no_of_stores' => 'required|numeric|min:1',
         'assign_while_register' => 'boolean',
-        'trial_days' => 'nullable|numeric',
+        'trial_days' => 'nullable|integer|min:0|max:3650',
     ];
 
     const WEEKLY = 1;
