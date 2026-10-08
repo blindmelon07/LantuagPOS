@@ -86,7 +86,7 @@ class PayMongoPaymentController extends AppBaseController
                                 'description' => $plan->description,
                                 'quantity' => 1,
                             ]],
-                            'payment_method_types' => ['card', 'gcash', 'paymaya', 'grab_pay'],
+                            'payment_method_types' => ['qrph'],
                             'reference_number' => $reference,
                             'metadata' => $metadata,
                             'success_url' => route('paymongo-success') . '?reference_number=' . $reference,
