@@ -5,6 +5,8 @@
 /vendor
 .env
 .env.backup
+/resources/backups
+/storage/framework/lsp-*.php
 /.phpunit.cache
 docker-compose.override.yml
 Homestead.json
