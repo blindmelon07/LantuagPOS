@@ -70,7 +70,8 @@ class SubscriptionAPIController extends AppBaseController
     public function getComparePlans(Plan $plan)
     {
         $plan['currency_symbol'] = $plan->currency->symbol ?? '';
-        $plan['start_date'] = Carbon::now()->format('jS F, Y');
+        $start_date = Carbon::now();
+        $plan['start_date'] = $start_date->format('jS F, Y');
         $end_date = Carbon::now()->addDays(7);
         if ($plan->trial_days > 0) {
             $end_date = Carbon::now()->addDays($plan->trial_days);
@@ -86,7 +87,7 @@ class SubscriptionAPIController extends AppBaseController
             }
         }
         $plan['end_date'] = $end_date->format('jS F, Y');
-        $plan['total_days'] = Carbon::parse($plan['start_date'])->diffInDays(Carbon::parse($plan['end_date']));
+        $plan['total_days'] = $start_date->copy()->startOfDay()->diffInDays($end_date->copy()->startOfDay());
 
         $currentSubscription = Subscription::where('user_id', Auth::id())->where('status', Subscription::ACTIVE)->first();
         if (!empty($currentSubscription)) {
