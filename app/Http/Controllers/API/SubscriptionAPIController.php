@@ -74,7 +74,7 @@ class SubscriptionAPIController extends AppBaseController
         $plan['start_date'] = $start_date->format('jS F, Y');
         $end_date = Carbon::now()->addDays(7);
         if ($plan->trial_days > 0) {
-            $end_date = Carbon::now()->addDays($plan->trial_days);
+            $end_date = Carbon::now()->addDays(min($plan->trial_days, Plan::MAX_TRIAL_DAYS));
         } else {
             if ($plan->frequency == Plan::WEEKLY) {
                 $end_date = Carbon::now()->addDays(7)->endOfDay();
