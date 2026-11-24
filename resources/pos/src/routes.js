@@ -395,11 +395,6 @@ export const route = [
         permission: "",
     },
     {
-        path: "user-detail",
-        ele: <UserDetail />,
-        permission: Permissions.MANAGE_USER,
-    },
-    {
         path: "sales",
         ele: <Sales />,
         permission: Permissions.MANAGE_SALE,

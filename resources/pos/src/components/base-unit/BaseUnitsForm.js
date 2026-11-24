@@ -72,7 +72,7 @@ const BaseUnitsForm = ( props ) => {
             onHide={clearField}
             keyboard={true}
             onShow={() => setTimeout( () => {
-                innerRef.current.focus();
+                innerRef.current && innerRef.current.focus();
             }, 1 )}
         >
             <Form onKeyPress={( e ) => {

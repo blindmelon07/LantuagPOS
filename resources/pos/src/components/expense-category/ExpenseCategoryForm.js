@@ -67,7 +67,7 @@ const ExpenseCategoryForm = (props) => {
                onHide={() => clearField(false)}
                keyboard={true}
                onShow={() => setTimeout(() => {
-                   innerRef.current.focus();
+                   innerRef.current && innerRef.current.focus();
                }, 1)}>
             <Form onKeyPress={(e) => {
                 if (e.key === 'Enter') {

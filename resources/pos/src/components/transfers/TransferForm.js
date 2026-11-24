@@ -307,7 +307,6 @@ const TransferForm = ( props ) => {
                         <ReactSelect data={warehouses} onChange={onWarehouseChangeTow}
                             value={transferValue.to_warehouse_id}
                             defaultValue={transferValue.to_warehouse_id} addSearchItems={singleTransfer}
-                            isWarehouseDisable={true}
                             title={getFormattedMessage( 'transfer.to-warehouse.title' )} errors={errors[ 'to_warehouse_id' ]}
                             placeholder={placeholderText( 'product.input.warehouse.placeholder.label' )} />
                     </div>

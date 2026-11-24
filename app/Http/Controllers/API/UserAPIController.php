@@ -53,7 +53,10 @@ class UserAPIController extends AppBaseController
         return new UserResource($user);
     }
 
-    public function show($id): UserResource
+    /**
+     * @return UserResource|JsonResponse
+     */
+    public function show($id)
     {
         $loginUserId = Auth::id();
         $userStore = UserStore::where('user_id', $loginUserId)->first();
@@ -68,6 +71,10 @@ class UserAPIController extends AppBaseController
         }
 
         $user = $query->find($id);
+
+        if (empty($user)) {
+            return $this->sendError(__('messages.error.user_with_id_not_found'), 404);
+        }
 
         return new UserResource($user);
     }
