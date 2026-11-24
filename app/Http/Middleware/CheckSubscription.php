@@ -52,11 +52,9 @@ class CheckSubscription
 
     private function hasActiveSubscription($userId): bool
     {
-        $activeSubscription = Subscription::where('user_id', $userId)
-            ->where('status', Subscription::ACTIVE)
-            ->first();
+        $activeSubscription = Subscription::activeFor($userId);
 
-        return $activeSubscription && $activeSubscription->end_date >= now();
+        return $activeSubscription && !$activeSubscription->isExpired();
     }
 
     private function matchesProtectedRoute(Request $request): bool

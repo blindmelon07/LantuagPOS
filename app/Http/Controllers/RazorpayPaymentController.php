@@ -31,11 +31,15 @@ class RazorpayPaymentController extends AppBaseController
     {
         $input = $request->validate([
             'plan_id' => 'required',
-            'amount' => 'required',
+            'amount' => 'nullable',
         ]);
 
         $plan = Plan::findorfail($input['plan_id']);
-        $amount = $input['amount'] * 100;
+        $payable = SubscriptionRepository::calculatePayableAmount($plan, Auth::id());
+        if ($payable <= 0) {
+            return $this->sendError('No payment is required for this plan.');
+        }
+        $amount = (int) round($payable * 100);
 
         $sadminSetting = SadminSetting::whereIn('key', ['razorpay_key', 'razorpay_secret'])->pluck('value', 'key')->toArray();
         $razorpaySecret = !empty($sadminSetting['razorpay_key']) ? $sadminSetting['razorpay_secret'] : config('services.razorpay.secret');

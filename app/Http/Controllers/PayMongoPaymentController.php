@@ -39,7 +39,7 @@ class PayMongoPaymentController extends AppBaseController
     {
         $input = $request->validate([
             'plan_id' => 'required',
-            'amount' => 'required',
+            'amount' => 'nullable',
         ]);
 
         $plan = Plan::findorfail($input['plan_id']);
@@ -49,7 +49,11 @@ class PayMongoPaymentController extends AppBaseController
             return $this->sendError(__('messages.error.currency_not_supported_paymongo'));
         }
 
-        $amount = $input['amount'] * 100;
+        $payable = SubscriptionRepository::calculatePayableAmount($plan, Auth::id());
+        if ($payable <= 0) {
+            return $this->sendError('No payment is required for this plan.');
+        }
+        $amount = (int) round($payable * 100);
 
         $secretKey = $this->getSecretKey();
 
@@ -90,7 +94,7 @@ class PayMongoPaymentController extends AppBaseController
                             'reference_number' => $reference,
                             'metadata' => $metadata,
                             'success_url' => route('paymongo-success') . '?reference_number=' . $reference,
-                            'cancel_url' => route('paymongo-failed', ['plan_id' => $plan->id, 'amount' => $input['amount']]) . '&reference_number=' . $reference,
+                            'cancel_url' => route('paymongo-failed', ['plan_id' => $plan->id, 'amount' => $payable]) . '&reference_number=' . $reference,
                         ],
                     ],
                 ]);

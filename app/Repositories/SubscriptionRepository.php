@@ -18,6 +18,15 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
  */
 class SubscriptionRepository extends BaseRepository
 {
+    /** Gateways whose callback only fires after a confirmed payment, so the subscription starts active. */
+    const ONLINE_PAYMENT_TYPES = [
+        Subscription::TYPE_STRIPE,
+        Subscription::TYPE_PAYPAL,
+        Subscription::TYPE_RAZORPAY,
+        Subscription::TYPE_PAYSTACK,
+        Subscription::TYPE_PAYMONGO,
+    ];
+
     protected $fieldSearchable = [
         'transaction_id',
         'plan_amount',
@@ -158,6 +167,21 @@ class SubscriptionRepository extends BaseRepository
         return $query->orderBy('created_at', 'desc')->paginate($perPage);
     }
 
+    /**
+     * Server-side amount a user must pay to switch to $plan: plan price minus the unused
+     * balance of their current, non-expired subscription. Never trust the client for this.
+     */
+    public static function calculatePayableAmount(Plan $plan, $userId): float
+    {
+        $payable = (float) $plan->price;
+        $currentSubscription = Subscription::activeFor($userId);
+        if (!empty($currentSubscription) && !$currentSubscription->isExpired()) {
+            $payable -= $currentSubscription->usageSummary()['remaining_balance'];
+        }
+
+        return max(0, round($payable, 2));
+    }
+
     public static function createSubscription($data)
     {
         try {
@@ -169,21 +193,8 @@ class SubscriptionRepository extends BaseRepository
             $paymentType = $data['payment_type'] ?? null;
             $transactionId = $data['transaction_id'] ?? null;
             $storeIds = $data['stores'] ?? null;
-            $end_date = Carbon::now()->addDays(7);
-
-            if ($plan->trial_days > 0) {
-                $end_date = Carbon::now()->addDays(min($plan->trial_days, Plan::MAX_TRIAL_DAYS));
-            } else {
-                if ($plan->frequency == Plan::WEEKLY) {
-                    $end_date = Carbon::now()->addDays(7)->endOfDay();
-                } elseif ($plan->frequency == Plan::MONTHLY) {
-                    $end_date = Carbon::now()->addMonths(1)->endOfDay();
-                } elseif ($plan->frequency == Plan::YEARLY) {
-                    $end_date = Carbon::now()->addYears(1)->endOfDay();
-                } elseif ($plan->frequency == Plan::UNLIMITED) {
-                    $end_date = Carbon::now()->addYears(1)->endOfDay();
-                }
-            }
+            $applyTrial = $plan->shouldApplyTrial($paymentType !== null && (int) $paymentType === Subscription::TYPE_FREE);
+            $end_date = $plan->calculateEndDate(null, $applyTrial);
 
             if ($paymentType == Subscription::TYPE_MANUAL && $storeIds) {
                 $storeData = json_encode([
@@ -201,7 +212,7 @@ class SubscriptionRepository extends BaseRepository
                 'plan_frequency' => $plan->frequency,
                 'start_date' => Carbon::now(),
                 'end_date' => $end_date,
-                'trial_ends_at' => $plan->trial_days > 0 ? $end_date : null,
+                'trial_ends_at' => $applyTrial ? $end_date : null,
                 'status' => $data['status'] ?? Subscription::PENDING,
                 'notes' => $notes,
                 'data' => $storeData ?? null,
@@ -209,7 +220,7 @@ class SubscriptionRepository extends BaseRepository
 
 
             if ($paymentType !== null) {
-                if ($paymentType == Subscription::TYPE_STRIPE || $paymentType == Subscription::TYPE_PAYPAL || $paymentType == Subscription::TYPE_RAZORPAY || $paymentType == Subscription::TYPE_PAYSTACK) {
+                if (in_array((int) $paymentType, self::ONLINE_PAYMENT_TYPES, true)) {
                     $subscriptionData['status'] = Subscription::ACTIVE;
                     $subscriptionData['is_paid'] = 1;
                 } elseif ($paymentType == Subscription::TYPE_FREE) {
@@ -218,14 +229,12 @@ class SubscriptionRepository extends BaseRepository
                 }
             }
 
-            $currentSubscription = Subscription::where('user_id', Auth::id())->where('status', Subscription::ACTIVE)->first();
-            if (!empty($currentSubscription)) {
-                $usedDays = round(abs(Carbon::now()->diffInDays($currentSubscription->start_date)));
-                $totalDays = Carbon::parse($currentSubscription->start_date)->diffInDays(Carbon::parse($currentSubscription->end_date));
-                $perDayPrice = round($currentSubscription->plan_amount / $totalDays, 2);
-                $remainingBalance = round($currentSubscription->plan_amount - ($perDayPrice * $usedDays));
+            // Credit the unused part of the user's current (non-expired) subscription.
+            $currentSubscription = Subscription::activeFor($user_id);
+            if (!empty($currentSubscription) && !$currentSubscription->isExpired()) {
+                $remainingBalance = $currentSubscription->usageSummary()['remaining_balance'];
 
-                $price = $subscriptionData['payable_amount'] - $remainingBalance;
+                $price = round($subscriptionData['payable_amount'] - $remainingBalance, 2);
                 if ($price <= 0) {
                     $subscriptionData['payment_type'] = $currentSubscription['payment_type'];
                     $subscriptionData['payable_amount'] = 0;
@@ -233,6 +242,12 @@ class SubscriptionRepository extends BaseRepository
                 } else {
                     $subscriptionData['payable_amount'] = $price;
                 }
+            }
+
+            // Nothing to pay (free plan): no approval is needed.
+            if ($plan->price <= 0) {
+                $subscriptionData['payable_amount'] = 0;
+                $subscriptionData['status'] = Subscription::ACTIVE;
             }
 
             $subscription = Subscription::create($subscriptionData);

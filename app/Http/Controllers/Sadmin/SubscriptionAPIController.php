@@ -67,8 +67,34 @@ class SubscriptionAPIController extends AppBaseController
         ]);
 
         if ($subscription->status == Subscription::PENDING) {
+            $newStatus = (int) $validated['status'];
+
+            // Only an approved payment may change the user's stores; a rejection leaves everything as is.
+            if ($newStatus == Subscription::ACTIVE) {
+                $this->applyPlanStoreLimits($subscription);
+            }
+
+            $subscription->update([
+                'status' => $newStatus,
+                'is_paid' => $newStatus == Subscription::ACTIVE ? 1 : 0,
+            ]);
+
+            if ($subscription->status == Subscription::ACTIVE) {
+                Subscription::where('user_id', $subscription->user_id)
+                    ->whereNot('id', $subscription->id)
+                    ->where('status', Subscription::ACTIVE)
+                    ->update(['status' => Subscription::INACTIVE]);
+            }
+
+            return $this->sendSuccess(__('messages.success.status_updated'));
+        }
+
+        return $this->sendError('Status can\'t be updated');
+    }
+
+    private function applyPlanStoreLimits(Subscription $subscription): void
+    {
             $storeUser = User::withoutGlobalScope('tenant')->find($subscription->user_id);
-            $userStores = Store::where('user_id', $subscription->user_id)->get();
 
             if ($subscription->data) {
                 $decodedData = json_decode($subscription->data);
@@ -103,35 +129,19 @@ class SubscriptionAPIController extends AppBaseController
                 }
             }
 
-            $activeStores = $userStores->where('status', 1);
-            if ($activeStores->count() > $subscription->plan->no_of_stores) {
-                $storeIdsToDisable = $activeStores->sortBy('id')->pluck('id')->slice($subscription->plan->no_of_stores)->values()->toArray();
-                $disableStores = Store::whereIn('id', $storeIdsToDisable)->get();
-                foreach ($disableStores as $store) {
-                    if ($storeUser->tenant_id = $store->tenant_id) {
-                        $storeUser->update(['tenant_id' => $activeStores->first()->tenant_id]);
+            // Enforce the plan's store limit on the stores that are active *now* (after the changes above).
+            $activeStores = Store::where('user_id', $subscription->user_id)->where('status', 1)->orderBy('id')->get();
+            $limit = (int) $subscription->plan->no_of_stores;
+            if ($limit > 0 && $activeStores->count() > $limit) {
+                $keptStores = $activeStores->take($limit);
+                foreach ($activeStores->slice($limit) as $store) {
+                    if ($storeUser && $storeUser->tenant_id == $store->tenant_id) {
+                        $storeUser->update(['tenant_id' => $keptStores->first()->tenant_id]);
                     }
                     $store->status = 0;
                     $store->save();
                 }
             }
-
-            $subscription->update([
-                'status' => (int) $validated['status'],
-                'is_paid' => (int) $validated['status'] == Subscription::ACTIVE ? 1 : 0,
-            ]);
-
-            if ($subscription->status == Subscription::ACTIVE) {
-                Subscription::where('user_id', $subscription->user_id)
-                    ->whereNot('id', $subscription->id)
-                    ->where('status', Subscription::ACTIVE)
-                    ->update(['status' => Subscription::INACTIVE]);
-            }
-
-            return $this->sendSuccess(__('messages.success.status_updated'));
-        }
-
-        return $this->sendError('Status can\'t be updated');
     }
 
     public function endDateUpdate(Request $request, Subscription $subscription)

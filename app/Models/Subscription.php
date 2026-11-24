@@ -126,16 +126,39 @@ class Subscription extends Model implements JsonResourceful, HasMedia
 
     public function isExpired(): bool
     {
-        $now = Carbon::now();
+        return empty($this->end_date) || Carbon::parse($this->end_date)->lte(Carbon::now());
+    }
 
-        if ($this->end_date > $now) {
-            return false;
+    public static function activeFor($userId): ?self
+    {
+        return self::where('user_id', $userId)
+            ->where('status', self::ACTIVE)
+            ->latest('id')
+            ->first();
+    }
+
+    /**
+     * Day/balance usage of this subscription, used for proration and the compare-plan screen.
+     */
+    public function usageSummary(): array
+    {
+        $start = Carbon::parse($this->start_date)->startOfDay();
+        $end = Carbon::parse($this->end_date)->startOfDay();
+        $totalDays = max(1, $start->diffInDays($end));
+        $usedDays = min($totalDays, $start->diffInDays(Carbon::now()->startOfDay()));
+        $remainingDays = max(0, $totalDays - $usedDays);
+
+        $remainingBalance = 0.0;
+        if (! $this->isExpired() && $this->plan_amount > 0) {
+            $remainingBalance = round($this->plan_amount * $remainingDays / $totalDays, 2);
         }
 
-        if ((! empty($this->trial_ends_at) && $this->trial_ends_at < $now) || $this->end_date < $now) {
-            return true;
-        }
-
-        return false;
+        return [
+            'total_days' => $totalDays,
+            'used_days' => $usedDays,
+            'remaining_days' => $this->isExpired() ? 0 : $remainingDays,
+            'remaining_balance' => $remainingBalance,
+            'used_balance' => round(max(0, $this->plan_amount - $remainingBalance), 2),
+        ];
     }
 }

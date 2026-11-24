@@ -145,20 +145,8 @@ class AdminRepository extends BaseRepository
                     ->where('user_id', $user->id)
                     ->where('status', Subscription::ACTIVE)->latest()->first();
                 if ($currentPlan) {
-                    $end_date = Carbon::now()->addDays(7);
-                    if ($plan->trial_days > 0) {
-                        $end_date = Carbon::now()->addDays(min($plan->trial_days, Plan::MAX_TRIAL_DAYS));
-                    } else {
-                        if ($plan->frequency == Plan::WEEKLY) {
-                            $end_date = Carbon::now()->addDays(7)->endOfDay();
-                        } elseif ($plan->frequency == Plan::MONTHLY) {
-                            $end_date = Carbon::now()->addMonths(1)->endOfDay();
-                        } elseif ($plan->frequency == Plan::YEARLY) {
-                            $end_date = Carbon::now()->addYears(1)->endOfDay();
-                        } elseif ($plan->frequency == Plan::UNLIMITED) {
-                            $end_date = Carbon::now()->addYears(1)->endOfDay();
-                        }
-                    }
+                    $applyTrial = $plan->shouldApplyTrial();
+                    $end_date = $plan->calculateEndDate(null, $applyTrial);
 
                     $currentPlan->update([
                         'plan_id' => $plan->id,
@@ -166,7 +154,7 @@ class AdminRepository extends BaseRepository
                         'plan_frequency' => $plan->frequency,
                         'start_date' => Carbon::now(),
                         'end_date' => $end_date,
-                        'trial_ends_at' => $plan->trial_days > 0 ? $end_date : null,
+                        'trial_ends_at' => $applyTrial ? $end_date : null,
                         'payment_type' => Subscription::TYPE_MANUAL,
                         'status' => Subscription::ACTIVE,
                     ]);

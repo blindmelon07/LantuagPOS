@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Contracts\JsonResourceful;
 use App\Traits\HasJsonResourcefulData;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -81,5 +82,29 @@ class Plan extends BaseModel implements JsonResourceful
     public function planFeature(): HasOne
     {
         return $this->hasOne(PlanFeature::class, 'plan_id');
+    }
+
+    /**
+     * Trial days only apply to free subscriptions (registration / zero-priced plans).
+     * A paid purchase always gets the plan's full billing period.
+     */
+    public function shouldApplyTrial(bool $isFree = false): bool
+    {
+        return $this->trial_days > 0 && ($isFree || $this->price <= 0);
+    }
+
+    public function calculateEndDate(?Carbon $startDate = null, bool $applyTrial = false): Carbon
+    {
+        $start = $startDate ? $startDate->copy() : Carbon::now();
+
+        if ($applyTrial && $this->trial_days > 0) {
+            return $start->addDays(min((int) $this->trial_days, self::MAX_TRIAL_DAYS))->endOfDay();
+        }
+
+        return match ((int) $this->frequency) {
+            self::MONTHLY => $start->addMonthNoOverflow()->endOfDay(),
+            self::YEARLY, self::UNLIMITED => $start->addYear()->endOfDay(),
+            default => $start->addDays(7)->endOfDay(),
+        };
     }
 }

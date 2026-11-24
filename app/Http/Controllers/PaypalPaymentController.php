@@ -29,11 +29,15 @@ class PaypalPaymentController extends AppBaseController
     {
         $input = $request->validate([
             'plan_id' => 'required',
-            'amount' => 'required',
+            'amount' => 'nullable',
         ]);
 
         $plan = Plan::findOrFail($input['plan_id']);
-        $amount = $input['amount'];
+        $payable = SubscriptionRepository::calculatePayableAmount($plan, Auth::id());
+        if ($payable <= 0) {
+            return $this->sendError('No payment is required for this plan.');
+        }
+        $amount = number_format($payable, 2, '.', '');
         if (! in_array(strtoupper($plan->currency->code), getPayPalSupportedCurrencies())) {
             return $this->sendError(__('messages.error.currency_not_supported_paypal'));
         }

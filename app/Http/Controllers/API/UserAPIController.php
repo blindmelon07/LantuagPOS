@@ -218,31 +218,28 @@ class UserAPIController extends AppBaseController
 
         if (!$user->hasRole(Role::SUPER_ADMIN)) {
             $isSuperAdmin = false;
+            // Without an active, unexpired subscription the store is treated as expired, matching
+            // the CheckSubscription middleware (otherwise the UI looks fine but every save fails with 403).
+            $subscriptionOwnerId = null;
             if ($user->hasRole(Role::ADMIN) && $user->subscriptions->count() > 0) {
-                $activeSubscription = Subscription::where('user_id', $user->id)->where('status', Subscription::ACTIVE)->first();
-                if (!empty($activeSubscription)) {
-                    $checkSubscription = $activeSubscription->end_date <= Carbon::now();
-
-                    // Calculate remaining days and plan expiry notification
-                    $remainingDaysOfSubscription = Carbon::now()->diffInDays(Carbon::parse($activeSubscription->end_date), false);
-                    $notificationDays = (int) getSadminSettingValue('plan_expire_notification_day');
-                    if ($remainingDaysOfSubscription <= $notificationDays) {
-                        $planExpireNotification = true;
-                    }
-                }
+                $subscriptionOwnerId = $user->id;
             } else {
                 $isSubUser = true;
                 $store = Store::where('tenant_id', $user->tenant_id)->first();
-                $activeSubscription = Subscription::where('user_id', $store->user_id)->where('status', Subscription::ACTIVE)->first();
-                if (!empty($activeSubscription)) {
-                    $checkSubscription = $activeSubscription->end_date <= Carbon::now();
+                $subscriptionOwnerId = $store->user_id ?? null;
+            }
 
-                    $remainingDaysOfSubscription = Carbon::now()->diffInDays(Carbon::parse($activeSubscription->end_date), false);
-                    $notificationDays = (int) getSadminSettingValue('plan_expire_notification_day');
-                    if ($remainingDaysOfSubscription > 0 && $remainingDaysOfSubscription <= $notificationDays) {
-                        $planExpireNotification = true;
-                    }
+            $activeSubscription = $subscriptionOwnerId ? Subscription::activeFor($subscriptionOwnerId) : null;
+            $checkSubscription = empty($activeSubscription) || $activeSubscription->isExpired();
+            if (!empty($activeSubscription)) {
+                $remainingDaysOfSubscription = Carbon::now()->diffInDays(Carbon::parse($activeSubscription->end_date), false);
+                $notificationDays = (int) getSadminSettingValue('plan_expire_notification_day');
+                if (!$checkSubscription && $remainingDaysOfSubscription <= $notificationDays) {
+                    $planExpireNotification = true;
                 }
+            }
+
+            if ($isSubUser) {
                 $userActiveStore = Store::where('tenant_id', $user->tenant_id)->where('status', 1)->first();
                 $userStoreAvailable = $userActiveStore ? UserStore::where('user_id', $user->id)->where('store_id', $userActiveStore->id)->first() : null;
                 if (!empty($userStoreAvailable)) {

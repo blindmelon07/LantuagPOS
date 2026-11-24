@@ -49,17 +49,12 @@ class SubscriptionAPIController extends AppBaseController
 
     public function getCurrentPlan()
     {
-        $currentSubscription = Subscription::where('user_id', Auth::id())->where('status', Subscription::ACTIVE)->first();
+        $currentSubscription = Subscription::activeFor(Auth::id());
         if (!empty($currentSubscription)) {
-            $currentSubscription['currency_symbol'] = $currentSubscription->plan->currency->symbol;
-            $currentSubscription['used_days'] = round(abs(Carbon::now()->diffInDays($currentSubscription->start_date)));
-
-            $currentSubscription['total_days'] = Carbon::parse($currentSubscription->start_date)->diffInDays(Carbon::parse($currentSubscription->end_date));
-
-            $currentSubscription['remaining_days'] = round($currentSubscription['total_days'] - $currentSubscription['used_days']);
-            $perDayPrice = round($currentSubscription->plan_amount / $currentSubscription['total_days'], 2);
-            $currentSubscription['remaining_balance'] = round($currentSubscription->plan_amount - ($perDayPrice * $currentSubscription['used_days']));
-            $currentSubscription['used_balance'] = round($currentSubscription->plan_amount - $currentSubscription['remaining_balance']);
+            $currentSubscription['currency_symbol'] = $currentSubscription->plan->currency->symbol ?? '';
+            foreach ($currentSubscription->usageSummary() as $key => $value) {
+                $currentSubscription[$key] = $value;
+            }
 
             return $this->sendResponse($currentSubscription->toArray(), 'Current Plan retrieved successfully');
         }
@@ -71,55 +66,22 @@ class SubscriptionAPIController extends AppBaseController
     {
         $plan['currency_symbol'] = $plan->currency->symbol ?? '';
         $start_date = Carbon::now();
+        // Purchases from this screen are paid, so trial days only apply to free plans.
+        $end_date = $plan->calculateEndDate($start_date, $plan->shouldApplyTrial());
         $plan['start_date'] = $start_date->format('jS F, Y');
-        $end_date = Carbon::now()->addDays(7);
-        if ($plan->trial_days > 0) {
-            $end_date = Carbon::now()->addDays(min($plan->trial_days, Plan::MAX_TRIAL_DAYS));
-        } else {
-            if ($plan->frequency == Plan::WEEKLY) {
-                $end_date = Carbon::now()->addDays(7)->endOfDay();
-            } elseif ($plan->frequency == Plan::MONTHLY) {
-                $end_date = Carbon::now()->addMonths(1)->endOfDay();
-            } elseif ($plan->frequency == Plan::YEARLY) {
-                $end_date = Carbon::now()->addYears(1)->endOfDay();
-            } elseif ($plan->frequency == Plan::UNLIMITED) {
-                $end_date = Carbon::now()->addYears(1)->endOfDay();
-            }
-        }
         $plan['end_date'] = $end_date->format('jS F, Y');
         $plan['total_days'] = $start_date->copy()->startOfDay()->diffInDays($end_date->copy()->startOfDay());
 
-        $currentSubscription = Subscription::where('user_id', Auth::id())->where('status', Subscription::ACTIVE)->first();
+        $currentSubscription = Subscription::activeFor(Auth::id());
         if (!empty($currentSubscription)) {
-            $totalDays = (int) Carbon::parse($currentSubscription->start_date)->diffInDays($currentSubscription->end_date);
-            $usedDays = (int) round(Carbon::parse($currentSubscription->start_date)->diffInDays(Carbon::now()));
-            $remainingDays = $totalDays > $usedDays ? $totalDays - $usedDays : 0;
-            if ($totalDays == 0) {
-                $totalDays = 1;
+            foreach ($currentSubscription->usageSummary() as $key => $value) {
+                $currentSubscription[$key] = $value;
             }
-            $perDayPrice = (int) round($currentSubscription->plan_amount / $totalDays, 2);
-            if ($currentSubscription->isExpired()) {
-                $remainingBalance = 0.00;
-                $usedBalance = 0.00;
-            } else {
-                $remainingBalance = (int) round($currentSubscription->plan_amount - ($perDayPrice * $usedDays));
-                $usedBalance = (int) round($currentSubscription->plan_amount - $remainingBalance);
-            }
-
-            $currentSubscription['total_days'] = $totalDays;
-            $currentSubscription['used_days'] = $usedDays;
-            $currentSubscription['remaining_days'] = $remainingDays;
-            $currentSubscription['currency_symbol'] = $currentSubscription->plan->currency->symbol;
+            $currentSubscription['currency_symbol'] = $currentSubscription->plan->currency->symbol ?? '';
             $currentSubscription['start_date'] = Carbon::parse($currentSubscription->start_date)->format('jS F, Y');
             $currentSubscription['end_date'] = Carbon::parse($currentSubscription->end_date)->format('jS F, Y');
-            $currentSubscription['total_days'] = $totalDays;
-            $currentSubscription['remaining_balance'] = $remainingBalance;
-            $currentSubscription['used_balance'] = $usedBalance;
-            $payableAmount = $remainingBalance > 0 ? $plan['price'] - $remainingBalance : $plan['price'];
-        } else {
-            $payableAmount = $plan['price'];
         }
-        $plan['payable_amount'] = $payableAmount > 0 ? (int) $payableAmount : 0;
+        $plan['payable_amount'] = SubscriptionRepository::calculatePayableAmount($plan, Auth::id());
 
         $data = [
             'current_plan' => $currentSubscription,
@@ -178,6 +140,12 @@ class SubscriptionAPIController extends AppBaseController
 
         if ((int) $validated['payment_type'] == Subscription::TYPE_MANUAL) {
             $input = $request->all();
+            // The manual-payment form sends the stores to keep as a JSON "branches" field.
+            if (empty($input['stores']) && !empty($input['branches'])) {
+                $branches = is_string($input['branches']) ? json_decode($input['branches'], true) : $input['branches'];
+                $input['stores'] = is_array($branches) ? array_values(array_filter($branches)) : null;
+            }
+            unset($input['user_id'], $input['status']);
             $this->subscriptionRepository->createSubscription($input);
             return $this->sendSuccess(__('messages.success.subscription_created'));
         }
