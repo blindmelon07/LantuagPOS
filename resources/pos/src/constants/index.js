@@ -739,6 +739,8 @@ export const Permissions = {
     MANAGE_ADJUSTMENTS: "manage_adjustments",
     MANAGE_TRANSFERS: "manage_transfers",
     MANAGE_REPORTS: "manage_reports",
+    MANAGE_KPI: "manage_kpi",
+    MANAGE_ACCOUNTING: "manage_accounting",
     MANAGE_EMAIL_TEMPLATES: "manage_email_templates",
     MANAGE_QUOTATION: "manage_quotations",
     MANAGE_SMS_API: "manage_sms_apis",
@@ -1144,6 +1146,8 @@ export const planFeatures = [
     { name: "plans.inventory.management.label", key: "inventory_management", selected: false },
     { name: "adjustments.title", key: "adjustments", selected: false },
     { name: "plans.roles.permission.support.label", key: "roles_permission", selected: false },
+    { name: "kpi.title", key: "kpi", selected: false },
+    { name: "accounting.title", key: "accounting", selected: false },
 ];
 
 export const permissionMappings = {
@@ -1182,6 +1186,8 @@ export const permissionMappings = {
     manage_sms_templates: "/app/user/sms-templates",
     manage_email_templates: "/app/user/email-templates",
     manage_store: "/app/user/store",
+    manage_kpi: "/app/user/kpi",
+    manage_accounting: "/app/user/accounting",
 };
 
 export const paymentOptions = {

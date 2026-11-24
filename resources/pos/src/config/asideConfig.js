@@ -21,6 +21,8 @@ import {
     faEnvelope,
     faCartShopping,
     faChartColumn,
+    faGaugeHigh,
+    faCalculator,
     faGear,
     faMapLocation,
     faBasketShopping,
@@ -349,6 +351,34 @@ export const userMenu = [
             {
                 title: getFormattedMessage("warehouse.title"),
                 to: "/app/user/warehouse",
+            },
+        ],
+    },
+    {
+        title: "kpi.title",
+        name: "kpi",
+        fontIcon: <FontAwesomeIcon icon={faGaugeHigh} />,
+        to: "/app/user/kpi",
+        class: "d-flex",
+        permission: Permissions.MANAGE_KPI,
+        items: [
+            {
+                title: getFormattedMessage("kpi.title"),
+                to: "/app/user/kpi",
+            },
+        ],
+    },
+    {
+        title: "accounting.title",
+        name: "accounting",
+        fontIcon: <FontAwesomeIcon icon={faCalculator} />,
+        to: "/app/user/accounting",
+        class: "d-flex",
+        permission: Permissions.MANAGE_ACCOUNTING,
+        items: [
+            {
+                title: getFormattedMessage("accounting.title"),
+                to: "/app/user/accounting",
             },
         ],
     },

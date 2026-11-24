@@ -125,6 +125,14 @@ class DefaultPermissionsSeeder extends Seeder
                 'name' => 'manage_variations',
                 'display_name' => 'Manage Variations'
             ],
+            [
+                'name' => 'manage_kpi',
+                'display_name' => 'Manage KPI'
+            ],
+            [
+                'name' => 'manage_accounting',
+                'display_name' => 'Manage Accounting'
+            ],
         ];
 
         foreach ($permissions as $permission) {

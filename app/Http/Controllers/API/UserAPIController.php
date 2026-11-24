@@ -268,30 +268,13 @@ class UserAPIController extends AppBaseController
 
         $userPermissions = $user->getAllPermissions()->pluck('name')->toArray();
 
-        $currentSubscription = Subscription::where('user_id', $user->id)->where('status', Subscription::ACTIVE)->first();
+        // Plan features come from the store owner's subscription (staff users don't have their own).
+        $currentSubscription = Subscription::activeFor($subscriptionOwnerId ?? $user->id);
         if (!empty($currentSubscription) && isset($currentSubscription->plan->planFeature)) {
-            $subscriptionFeature = $currentSubscription->plan->planFeature;
-            if (!$subscriptionFeature->pos_management) {
-                $userPermissions = array_values(array_diff($userPermissions, ["manage_pos_screen"]));
-            }
-            if (!$subscriptionFeature->reports) {
-                $userPermissions = array_values(array_diff($userPermissions, ["manage_reports"]));
-            }
-            if (!$subscriptionFeature->emails_support) {
-                $userPermissions = array_values(array_diff($userPermissions, ["manage_email_templates"]));
-            }
-            if (!$subscriptionFeature->sms_support) {
-                $userPermissions = array_values(array_diff($userPermissions, ["manage_sms_templates", "manage_sms_apis"]));
-            }
-            if (!$subscriptionFeature->inventory_management) {
-                $userPermissions = array_values(array_diff($userPermissions, []));
-            }
-            if (!$subscriptionFeature->adjustments) {
-                $userPermissions = array_values(array_diff($userPermissions, ["manage_adjustments"]));
-            }
-            if (!$subscriptionFeature->roles_permission) {
-                $userPermissions = array_values(array_diff($userPermissions, ["manage_roles"]));
-            }
+            $userPermissions = array_values(array_diff(
+                $userPermissions,
+                $currentSubscription->plan->planFeature->restrictedPermissions()
+            ));
         }
 
         $composerFile = file_get_contents('../composer.json');

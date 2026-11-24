@@ -146,6 +146,8 @@ class PlanAPIController extends AppBaseController
             'inventory_management',
             'adjustments',
             'roles_permission',
+            'kpi',
+            'accounting',
         ];
         return $this->sendResponse($features, 'Plan features retrieved successfully');
     }

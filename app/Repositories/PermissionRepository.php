@@ -50,29 +50,7 @@ class PermissionRepository extends BaseRepository
         $currentSubscription = Subscription::where('user_id', $user->id)->where('status', Subscription::ACTIVE)->first();
         $restrictedPermissions = [];
         if (!empty($currentSubscription) && isset($currentSubscription->plan->planFeature)) {
-            $subscriptionFeature = $currentSubscription->plan->planFeature;
-
-            if (!$subscriptionFeature->pos_management) {
-                $restrictedPermissions = array_merge($restrictedPermissions, ["manage_pos_screen"]);
-            }
-            if (!$subscriptionFeature->reports) {
-                $restrictedPermissions = array_merge($restrictedPermissions, ["manage_reports"]);
-            }
-            if (!$subscriptionFeature->emails_support) {
-                $restrictedPermissions = array_merge($restrictedPermissions, ["manage_email_templates"]);
-            }
-            if (!$subscriptionFeature->sms_support) {
-                $restrictedPermissions = array_merge($restrictedPermissions, ["manage_sms_templates", "manage_sms_apis"]);
-            }
-            if (!$subscriptionFeature->inventory_management) {
-                $restrictedPermissions = array_merge($restrictedPermissions, []);
-            }
-            if (!$subscriptionFeature->adjustments) {
-                $restrictedPermissions = array_merge($restrictedPermissions, ["manage_adjustments"]);
-            }
-            if (!$subscriptionFeature->roles_permission) {
-                $restrictedPermissions = array_merge($restrictedPermissions, ["manage_roles"]);
-            }
+            $restrictedPermissions = $currentSubscription->plan->planFeature->restrictedPermissions();
         }
 
         $managePermissions = $this->model

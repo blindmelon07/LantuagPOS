@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\KpiAPIController;
+use App\Http\Controllers\API\AccountingAPIController;
 use App\Http\Controllers\StoreAPIController;
 use App\Http\Controllers\API\HoldAPIController;
 use App\Http\Controllers\API\RoleAPIController;
@@ -469,6 +471,26 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         // Coupon Code Routes
         Route::resource('coupon-codes', CouponCodeAPIController::class);
         Route::get('front-setting', [SettingAPIController::class, 'getFrontSettingsValue'])->name('front-settings');
+
+        // KPI dashboard & monthly targets
+        Route::middleware(['permission:manage_kpi', 'plan_feature:kpi'])->prefix('kpi')->group(function () {
+            Route::get('summary', [KpiAPIController::class, 'summary']);
+            Route::get('targets', [KpiAPIController::class, 'targets']);
+            Route::post('targets', [KpiAPIController::class, 'saveTarget']);
+            Route::delete('targets/{id}', [KpiAPIController::class, 'deleteTarget']);
+        });
+
+        // Accounting
+        Route::middleware(['permission:manage_accounting', 'plan_feature:accounting'])->prefix('accounting')->group(function () {
+            Route::get('profit-loss', [AccountingAPIController::class, 'profitLoss']);
+            Route::get('vat', [AccountingAPIController::class, 'vat']);
+            Route::get('receivables', [AccountingAPIController::class, 'receivables']);
+            Route::get('payables', [AccountingAPIController::class, 'payables']);
+            Route::get('cash-flow', [AccountingAPIController::class, 'cashFlow']);
+            Route::get('cash-book', [AccountingAPIController::class, 'cashBook']);
+            Route::get('purchases/{purchaseId}/payments', [AccountingAPIController::class, 'purchasePayments']);
+            Route::post('purchases/{purchaseId}/payments', [AccountingAPIController::class, 'storePurchasePayment']);
+        });
     });
 });
 

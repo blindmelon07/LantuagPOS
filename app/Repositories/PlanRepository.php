@@ -59,7 +59,9 @@ class PlanRepository extends BaseRepository
                 'sms_support' => in_array('sms_support', $input['features']),
                 'inventory_management' => in_array('inventory_management', $input['features']),
                 'adjustments' => in_array('adjustments', $input['features']),
-                'roles_permission' => in_array('roles_permission', $input['features'])
+                'roles_permission' => in_array('roles_permission', $input['features']),
+                'kpi' => in_array('kpi', $input['features']),
+                'accounting' => in_array('accounting', $input['features']),
             ]);
 
             DB::commit();
@@ -93,7 +95,9 @@ class PlanRepository extends BaseRepository
                 'sms_support' => in_array('sms_support', $input['features']),
                 'inventory_management' => in_array('inventory_management', $input['features']),
                 'adjustments' => in_array('adjustments', $input['features']),
-                'roles_permission' => in_array('roles_permission', $input['features'])
+                'roles_permission' => in_array('roles_permission', $input['features']),
+                'kpi' => in_array('kpi', $input['features']),
+                'accounting' => in_array('accounting', $input['features']),
             ]);
 
             DB::commit();

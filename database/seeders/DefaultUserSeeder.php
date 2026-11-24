@@ -93,6 +93,8 @@ class DefaultUserSeeder extends Seeder
             'inventory_management' => 1,
             'adjustments' => 1,
             'roles_permission' => 1,
+            'kpi' => 1,
+            'accounting' => 1,
         ]);
 
         Subscription::create([

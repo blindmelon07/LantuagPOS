@@ -1,4 +1,6 @@
 import Dashboard from "./components/dashboard/Dashboard";
+import KpiDashboard from "./components/kpi/KpiDashboard";
+import Accounting from "./components/accounting/Accounting";
 import Brands from "./components/brands/Brands";
 import Currencies from "./components/currency/Currencies";
 import Warehouses from "./components/warehouse/Warehouses";
@@ -142,6 +144,16 @@ export const route = [
         path: "dashboard",
         ele: <Dashboard />,
         permission: Permissions.MANAGE_DASHBOARD,
+    },
+    {
+        path: "kpi",
+        ele: <KpiDashboard />,
+        permission: Permissions.MANAGE_KPI,
+    },
+    {
+        path: "accounting",
+        ele: <Accounting />,
+        permission: Permissions.MANAGE_ACCOUNTING,
     },
     {
         path: "brands",
