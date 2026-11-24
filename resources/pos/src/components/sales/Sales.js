@@ -289,8 +289,9 @@ const Sales = (props) => {
         } else {
             setTableArray([]);
 
-        } 
-    }, [sales]);
+        }
+        // currencySymbol/paymentMethods: the rows can't be built until these load, which may finish after the sales.
+    }, [sales, currencySymbol, paymentMethods]);
 
     const clearSelectedDeleteItem = () => {
         setClearSelectedRows(true);

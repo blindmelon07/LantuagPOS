@@ -45,7 +45,7 @@ class KpiAPIController extends AppBaseController
             ->where('warehouses.tenant_id', Auth::user()->tenant_id)
             ->when($request->integer('warehouse_id'), fn ($q, $id) => $q->where('manage_stocks.warehouse_id', $id))
             ->when(! isAdmin(), fn ($q) => $q->whereIn('manage_stocks.warehouse_id', getLoginUserWarehouseIds()))
-            ->sum(DB::raw('GREATEST(manage_stocks.quantity,0) * products.product_cost'));
+            ->sum(DB::raw('GREATEST(manage_stocks.quantity,0) * (' . FinanceService::netUnitCostSql() . ')'));
         $turnover = $stockValue > 0 ? round($current['cogs'] / $stockValue, 2) : null;
         $dailyCogs = $current['cogs'] / $days;
 

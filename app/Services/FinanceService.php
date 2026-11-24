@@ -81,25 +81,37 @@ class FinanceService
 
     /* ------------------------------------------------------------------ totals */
 
-    /** Sales totals for a period: gross, tax, count, items and cost of goods sold. */
+    /**
+     * SQL for a product's unit cost excluding VAT. When the product is priced VAT-inclusive
+     * (tax_type 2), its cost price includes recoverable input VAT, which must not be part of COGS.
+     */
+    public static function netUnitCostSql(string $table = 'products'): string
+    {
+        return "CASE WHEN {$table}.tax_type = 2 AND COALESCE({$table}.order_tax,0) > 0
+                     THEN COALESCE({$table}.product_cost,0) / (1 + {$table}.order_tax / 100)
+                     ELSE COALESCE({$table}.product_cost,0) END";
+    }
+
+    /** Sales totals for a period: gross, tax, count, items and cost of goods sold (excluding VAT). */
     public function salesSummary(Carbon $start, Carbon $end): array
     {
         $saleIds = $this->sales($start, $end)->pluck('id');
         $sales = Sale::whereIn('id', $saleIds);
+        $unitCost = self::netUnitCostSql();
 
         $items = DB::table('sale_items')
             ->leftJoin('products', 'products.id', '=', 'sale_items.product_id')
             ->whereIn('sale_items.sale_id', $saleIds)
-            ->selectRaw('COALESCE(SUM(sale_items.quantity),0) qty, COALESCE(SUM(sale_items.tax_amount),0) tax,
-                         COALESCE(SUM(sale_items.quantity * COALESCE(products.product_cost,0)),0) cost')
+            ->selectRaw("COALESCE(SUM(sale_items.quantity),0) qty, COALESCE(SUM(sale_items.tax_amount),0) tax,
+                         COALESCE(SUM(sale_items.quantity * ($unitCost)),0) cost")
             ->first();
 
         $returnIds = $this->saleReturns($start, $end)->pluck('id');
         $returnItems = DB::table('sale_return_items')
             ->leftJoin('products', 'products.id', '=', 'sale_return_items.product_id')
             ->whereIn('sale_return_items.sale_return_id', $returnIds)
-            ->selectRaw('COALESCE(SUM(sale_return_items.quantity),0) qty, COALESCE(SUM(sale_return_items.tax_amount),0) tax,
-                         COALESCE(SUM(sale_return_items.quantity * COALESCE(products.product_cost,0)),0) cost')
+            ->selectRaw("COALESCE(SUM(sale_return_items.quantity),0) qty, COALESCE(SUM(sale_return_items.tax_amount),0) tax,
+                         COALESCE(SUM(sale_return_items.quantity * ($unitCost)),0) cost")
             ->first();
         $returns = SaleReturn::whereIn('id', $returnIds);
 

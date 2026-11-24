@@ -183,7 +183,8 @@ const Product = (props) => {
                 newItemValue && newItemValue?.map((item) => item);
             newItemValue && newItemValue?.length && setTableArray(latestArray);
         }
-    }, [purchases]);
+        // currencySymbol: the rows can't be built until settings load, which may finish after the purchases.
+    }, [purchases, currencySymbol]);
 
     useEffect(() => {
         if (purchases.length === 0) {
