@@ -1,0 +1,6 @@
+Name,Code,Category,Brand,Barcode Symbol,Product Cost,Product Price,Product Unit,Sale Unit,Purchase Unit,Stock Alert,Order Tax,Tax Type,Notes,Warehouse,Supplier,Quantity,Status,Variation Name,Variation Type Name
+SHERA 3.2mm (Ficem Board),PKSB0001,Board - Ficem Board,Shera,CODE128,0,378,piece,piece,piece,,0,inclusive,Bulk order price: P355,,,,,,
+SHERA 4.0mm (Ficem Board),PKSB0002,Board - Ficem Board,Shera,CODE128,0,440,piece,piece,piece,,0,inclusive,Bulk order price: P410,,,,,,
+SENEPA 1/2mm (12 x 8) (Senepa Board),PKSB0003,Board - Senepa Board,Shera,CODE128,0,420,piece,piece,piece,,0,inclusive,Bulk order price: P410,,,,,,
+SANEPA 1/2mm (10 x 8) (Senepa Board),PKSB0004,Board - Senepa Board,Shera,CODE128,0,365,piece,piece,piece,,0,inclusive,Bulk order price: P350,,,,,,
+SHERA PLANKS (Pre-order) (Shera Planks),PKSB0005,Board - Shera Planks,Shera,CODE128,0,450,piece,piece,piece,,0,inclusive,Bulk order price: P439,,,,,,
